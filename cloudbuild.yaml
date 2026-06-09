@@ -1,0 +1,28 @@
+steps:
+  # Paso 1: Compilar la imagen de Docker usando Cloud Build
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [
+      'build',
+      '-t', 'southamerica-west1-docker.pkg.dev/$PROJECT_ID/todolist-repo/golang-backend:latest',
+      '.'
+    ]
+
+  # Paso 2: Subir la imagen empaquetada a Artifact Registry (Push)
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [
+      'push',
+      'southamerica-west1-docker.pkg.dev/$PROJECT_ID/todolist-repo/golang-backend:latest'
+    ]
+
+  # Paso 3: Desplegar automáticamente en Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'gcloud'
+    args: [
+      'run', 'deploy', 'todolist-api',
+      '--image', 'southamerica-west1-docker.pkg.dev/$PROJECT_ID/todolist-repo/golang-backend:latest',
+      '--region', 'southamerica-west1',
+      '--allow-unauthenticated'
+    ]
+
+images:
+  - 'southamerica-west1-docker.pkg.dev/$PROJECT_ID/todolist-repo/golang-backend:latest'

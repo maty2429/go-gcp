@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
-	"strconv"
 	"strings"
 
 	"task-api/internal/repository"
@@ -15,8 +14,7 @@ type TaskHandler struct {
 }
 
 type createTaskRequest struct {
-	Title       string `json:"title"`
-	Description string `json:"description"`
+	Title string `json:"title"`
 }
 
 type errorResponse struct {
@@ -80,7 +78,7 @@ func (h *TaskHandler) createTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	task, err := h.repo.Create(r.Context(), title, strings.TrimSpace(req.Description))
+	task, err := h.repo.Create(r.Context(), title)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "could not create task")
 		return
@@ -139,11 +137,11 @@ func (h *TaskHandler) deleteTask(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func parseID(w http.ResponseWriter, r *http.Request) (int64, bool) {
-	id, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
-	if err != nil || id <= 0 {
+func parseID(w http.ResponseWriter, r *http.Request) (string, bool) {
+	id := strings.TrimSpace(r.PathValue("id"))
+	if id == "" {
 		writeError(w, http.StatusBadRequest, "invalid task id")
-		return 0, false
+		return "", false
 	}
 
 	return id, true

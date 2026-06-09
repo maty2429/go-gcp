@@ -8,7 +8,8 @@ import (
 	"strings"
 	"time"
 
-	"task-api/internal/db"
+	"cloud.google.com/go/firestore"
+
 	"task-api/internal/handler"
 	"task-api/internal/repository"
 )
@@ -16,26 +17,16 @@ import (
 func main() {
 	ctx := context.Background()
 
-	databaseURL := strings.TrimSpace(os.Getenv("DATABASE_URL"))
-	httpAddr := getHTTPAddr()
+	projectID := "project-4bf3e3b5-7b1b-4eb3-8a3"
 
-	var taskRepo *repository.TaskRepository
-	if databaseURL == "" {
-		log.Printf("DATABASE_URL not set, starting without database")
-	} else {
-		pool, err := db.Connect(ctx, databaseURL)
-		if err != nil {
-			log.Printf("database unavailable, starting without database: %v", err)
-		} else {
-			defer pool.Close()
-
-			if err := db.InitSchema(ctx, pool); err != nil {
-				log.Printf("could not initialize schema, starting without database: %v", err)
-			} else {
-				taskRepo = repository.NewTaskRepository(pool)
-			}
-		}
+	client, err := firestore.NewClient(ctx, projectID)
+	if err != nil {
+		log.Fatalf("Error al conectar a Firestore: %v", err)
 	}
+	defer client.Close()
+
+	httpAddr := getHTTPAddr()
+	taskRepo := repository.NewTaskFirestoreRepository(client)
 
 	taskHandler := handler.NewTaskHandler(taskRepo)
 
