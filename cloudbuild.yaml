@@ -14,14 +14,17 @@ steps:
       'southamerica-west1-docker.pkg.dev/$PROJECT_ID/todolist-repo/golang-backend:latest'
     ]
 
-  # Paso 3: Desplegar automáticamente en Cloud Run
+  # Paso 3: Desplegar la nueva versión SIN darle tráfico automático
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: 'gcloud'
     args: [
       'run', 'deploy', 'todolist-api',
       '--image', 'southamerica-west1-docker.pkg.dev/$PROJECT_ID/todolist-repo/golang-backend:latest',
       '--region', 'southamerica-west1',
-      '--allow-unauthenticated'
+      '--allow-unauthenticated',
+      '--set-secrets=GCP_PROJECT_ID=PROJECT_ID_SECRET:latest',
+      '--no-traffic',
+      '--tag=canary'
     ]
 
 images:

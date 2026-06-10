@@ -17,7 +17,7 @@ import (
 func main() {
 	ctx := context.Background()
 
-	projectID := "project-4bf3e3b5-7b1b-4eb3-8a3"
+	projectID := os.Getenv("GCP_PROJECT_ID")
 
 	client, err := firestore.NewClient(ctx, projectID)
 	if err != nil {
