@@ -1,20 +1,13 @@
 steps:
-  # Paso 1: Compilar la imagen de Docker usando Cloud Build
-  - name: 'gcr.io/cloud-builders/docker'
+  # Paso 1: Compilar la imagen usando KANIKO para activar la caché en la nube
+  - name: 'gcr.io/kaniko-project/executor'
     args: [
-      'build',
-      '-t', 'southamerica-west1-docker.pkg.dev/$PROJECT_ID/todolist-repo/golang-backend:latest',
-      '.'
+      '--destination=southamerica-west1-docker.pkg.dev/$PROJECT_ID/todolist-repo/golang-backend:latest',
+      '--cache=true',
+      '--cache-dir=gs://${PROJECT_ID}-cloudbuild-cache/cache'
     ]
 
-  # Paso 2: Subir la imagen empaquetada a Artifact Registry (Push)
-  - name: 'gcr.io/cloud-builders/docker'
-    args: [
-      'push',
-      'southamerica-west1-docker.pkg.dev/$PROJECT_ID/todolist-repo/golang-backend:latest'
-    ]
-
-  # Paso 3: Desplegar la nueva versión SIN darle tráfico automático
+  # Paso 2: Desplegar la nueva versión en Cloud Run con control de tráfico
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: 'gcloud'
     args: [
@@ -26,6 +19,3 @@ steps:
       '--no-traffic',
       '--tag=canary'
     ]
-
-images:
-  - 'southamerica-west1-docker.pkg.dev/$PROJECT_ID/todolist-repo/golang-backend:latest'
